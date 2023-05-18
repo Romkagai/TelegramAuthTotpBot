@@ -5,3 +5,6 @@ bot_token.py
 
 # База данных
 user_codes.db
+
+#library root
+venv

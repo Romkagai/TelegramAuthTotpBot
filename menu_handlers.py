@@ -3,8 +3,8 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from bot_utils import bot, UserState, timers
 from code_generator import get_code
-from bot_messages import INFO_MESSAGE, MAIN_MENU_MESSAGE
-from database import get_service_name_from_db
+from bot_messages import INFO_MESSAGE, MAIN_MENU_MESSAGE, ASK_NEW_KEY_MESSAGE, ASK_NEW_NAME_MESSAGE
+from database import get_service_name_from_db, remove_key_from_db
 
 
 # Функция обработки команды /start
@@ -24,7 +24,10 @@ async def handle_menu_button(message):
         types.InlineKeyboardButton('Ввести ключ', callback_data='enter_key'),
     )
     keyboard.row(
-        types.InlineKeyboardButton('Переименовать сервис', callback_data='rename_service')
+        types.InlineKeyboardButton('Переименовать сервис', callback_data='rename_service_menu')
+    )
+    keyboard.row(
+        types.InlineKeyboardButton('Удалить ключ', callback_data='delete_key_menu')
     )
     keyboard.row(
         types.InlineKeyboardButton('INFO', callback_data='info'),
@@ -56,7 +59,7 @@ async def callback_handler(call: types.CallbackQuery, state: FSMContext):
         keyboard = types.InlineKeyboardMarkup()
         keyboard.row(types.InlineKeyboardButton('Назад', callback_data='back'))
         await bot.edit_message_text(chat_id=user_id, message_id=call.message.message_id,
-                                    text=f'Введите новый ключ для сервиса "{service_name}":',
+                                    text=f'{ASK_NEW_KEY_MESSAGE}"{service_name}":',
                                     parse_mode=types.ParseMode.MARKDOWN,
                                     reply_markup=keyboard)
 
@@ -68,12 +71,42 @@ async def callback_handler(call: types.CallbackQuery, state: FSMContext):
         keyboard = types.InlineKeyboardMarkup()
         keyboard.row(types.InlineKeyboardButton('Назад', callback_data='back'))
         await bot.edit_message_text(chat_id=user_id, message_id=call.message.message_id,
-                                    text=f'Введите новое имя для сервиса "{service_name}":',
+                                    text=f'{ASK_NEW_NAME_MESSAGE}"{service_name}":',
                                     parse_mode=types.ParseMode.MARKDOWN,
                                     reply_markup=keyboard)
 
+    # Обработка удаления ключа
+    elif action == 'delete':
+        service_name = get_service_name_from_db(user_id, column_number)[0]
+        keyboard = types.InlineKeyboardMarkup()
+        keyboard.row(
+            types.InlineKeyboardButton('Да', callback_data=f'confirm_delete:{column_number}'),
+            types.InlineKeyboardButton('Отмена', callback_data='cancel_delete'),
+        )
+        await bot.edit_message_text(chat_id=user_id, message_id=call.message.message_id,
+                                    text=f'Вы уверены, что хотите удалить ключ для "{service_name}"?:',
+                                    parse_mode=types.ParseMode.MARKDOWN,
+                                    reply_markup=keyboard)
+
+    # Обработка подтверждения удаления ключа
+    elif action == 'confirm_delete':
+        remove_key_from_db(user_id, column_number)
+        keyboard = types.InlineKeyboardMarkup()
+        keyboard.row(types.InlineKeyboardButton('Назад', callback_data='back'))
+        await bot.edit_message_text(chat_id=user_id, message_id=call.message.message_id,
+                                    text=f'Ключ успешно сброшен!',
+                                    parse_mode=types.ParseMode.MARKDOWN,
+                                    reply_markup=keyboard)
+
+    # Обработка кнопки отмены подтверждения
+    elif action == 'cancel_delete':
+        await back_menu(user_id, call)
+
+    elif action == 'delete_key_menu':
+        await delete_key_menu(user_id, call)
+
     # Переход в меню изменения имен сервисов
-    elif action == 'rename_service':
+    elif action == 'rename_service_menu':
         await rename_service_menu(user_id, call)
 
     # Переход в меню получения кодов
@@ -107,7 +140,10 @@ async def back_menu(user_id, call):
         types.InlineKeyboardButton('Ввести ключ', callback_data='enter_key'),
     )
     keyboard.row(
-        types.InlineKeyboardButton('Переименовать сервис', callback_data='rename_service')
+        types.InlineKeyboardButton('Переименовать сервис', callback_data='rename_service_menu')
+    )
+    keyboard.row(
+        types.InlineKeyboardButton('Удалить ключ', callback_data='delete_key_menu')
     )
     keyboard.row(
         types.InlineKeyboardButton('INFO', callback_data='info'),
@@ -137,6 +173,20 @@ async def rename_service_menu(user_id, call):
     await bot.edit_message_text(chat_id=user_id, message_id=call.message.message_id,
                                 text='Какой сервис вы бы хотели '
                                      'назвать собственным именем?',
+                                reply_markup=keyboard)
+
+
+# Меню переименовывания сервиса
+async def delete_key_menu(user_id, call):
+    keyboard = types.InlineKeyboardMarkup(row_width=2)
+    buttons_row = []
+    names = get_service_names(user_id)
+    for i, name in enumerate(names):
+        buttons_row.append(types.InlineKeyboardButton(name, callback_data=f"delete:{i}"))
+    keyboard.add(*buttons_row).add(types.InlineKeyboardButton('Назад', callback_data='back'))
+    await bot.edit_message_text(chat_id=user_id, message_id=call.message.message_id,
+                                text='Какой ключ вы бы хотели '
+                                     'удалить?',
                                 reply_markup=keyboard)
 
 

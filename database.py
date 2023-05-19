@@ -39,6 +39,17 @@ def add_key_to_db(text, user_id, column_number):
     conn.close()
 
 
+# Удаление ключа из базы данных
+def remove_key_from_db(user_id, column_number):
+    column_number = str(int(column_number) + 1)
+    conn = connect_to_database()
+    cur = conn.cursor()
+    query = f"UPDATE codes SET N{column_number} = NULL WHERE userid = ?;"
+    cur.execute(query, (user_id,))
+    conn.commit()
+    conn.close()
+
+
 # Взятие ключа из базы данных
 def get_key_from_db(userid, column_number):
     column_number = str(int(column_number) + 1)

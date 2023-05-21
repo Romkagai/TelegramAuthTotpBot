@@ -6,8 +6,8 @@ import sqlite3
 def create_or_check_database():
     conn = sqlite3.connect('user_codes.db', check_same_thread=False)
     cur = conn.cursor()
-    cur.execute("CREATE TABLE IF NOT EXISTS codes(userid INT, N1 TEXT, N2 TEXT);")
-    cur.execute("CREATE TABLE IF NOT EXISTS names(userid INT, N1 TEXT, N2 TEXT);")
+    cur.execute("CREATE TABLE IF NOT EXISTS codes(userid INT, N1 TEXT, N2 TEXT, N3 TEXT, N4 TEXT, N5 TEXT);")
+    cur.execute("CREATE TABLE IF NOT EXISTS names(userid INT, N1 TEXT, N2 TEXT, N3 TEXT, N4 TEXT, N5 TEXT);")
     conn.commit()
 
 
@@ -78,7 +78,7 @@ def get_service_name_from_db(userid, column_number):
 def get_service_names(userid):
     conn = connect_to_database()
     cur = conn.cursor()
-    cur.execute('SELECT N1, N2 FROM names WHERE userid = ?;', (userid,))
+    cur.execute('SELECT N1, N2, N3, N4, N5 FROM names WHERE userid = ?;', (userid,))
     rows = cur.fetchall()
     conn.close()
     return rows[0] if rows else None
@@ -90,9 +90,9 @@ def check_new_user(id):
     cur = conn.cursor()
     check_user = cur.execute('select userid from codes where userid = ?', (id,))
     if check_user.fetchone() is None:
-        cur.execute('insert into codes(userid, N1, N2) VALUES(?, ?, ?);',
-                    (id, None, None))
-        cur.execute('insert into names(userid, N1, N2) VALUES(?, ?, ?);',
-                    (id, 'Сервис 1', 'Сервис 2'))
+        cur.execute('insert into codes(userid, N1, N2, N3, N4, N5) VALUES(?, ?, ?, ?, ?, ?);',
+                    (id, None, None, None, None, None))
+        cur.execute('insert into names(userid, N1, N2, N3, N4, N5) VALUES(?, ?, ?, ?, ?, ?);',
+                    (id, 'Сервис 1', 'Сервис 2', 'Сервис 3', 'Сервис 4', 'Сервис 5'))
         conn.commit()
     conn.close()

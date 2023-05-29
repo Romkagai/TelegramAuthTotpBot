@@ -45,8 +45,9 @@ async def update_message_loop(chat_id, message_id, remaining_time, totp_code, se
                                     reply_markup=markup)
         return
     time_bar = await get_time_bar(remaining_time, 30)
-    new_text = f"Код для входа в {service_name}:<pre>{totp_code}</pre>(Нажмите, чтобы скопировать)\n\nВремя действия: "\
+    new_text = f"Код для входа в {service_name}:\n<pre>{totp_code}</pre>\n(Нажмите, чтобы скопировать)\n\nВремя действия: " \
                f"{await format_time(remaining_time)}\n{time_bar} "
+
     await bot.edit_message_text(chat_id=chat_id, message_id=message_id, text=new_text, reply_markup=markup,
                                 parse_mode="HTML")
     elapsed_time = asyncio.get_running_loop().time() - start_time
@@ -58,8 +59,8 @@ async def update_message_loop(chat_id, message_id, remaining_time, totp_code, se
 
 # Вспомогательная функция: генерирует строку эмодзи для визуального отображения времени
 async def get_time_bar(seconds_left, total_seconds):
-    bar = "🟩" * int(seconds_left / total_seconds * 15)
-    bar += "🟥" * (15 - len(bar))
+    bar = "🟩" * int(seconds_left / total_seconds * 13)
+    bar += "🟥" * (13 - len(bar))
     return f"{bar}"
 
 

@@ -13,7 +13,7 @@ async def handle_start_command(message: types.Message):
     markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
     menu_button = types.KeyboardButton('Получить меню')
     markup.add(menu_button)
-    await message.answer("Нажмите кнопку, чтобы получить меню:", reply_markup=markup)
+    await message.answer(INFO_MESSAGE, reply_markup=markup, parse_mode="HTML")
 
 
 # Функция обработки нажатия кнопки "Получить меню"
@@ -158,7 +158,7 @@ async def info_menu(user_id, call):
     keyboard = types.InlineKeyboardMarkup()
     keyboard.row(types.InlineKeyboardButton('Назад', callback_data='back'))
     await bot.edit_message_text(chat_id=user_id, message_id=call.message.message_id, text=INFO_MESSAGE,
-                                parse_mode=types.ParseMode.MARKDOWN,
+                                parse_mode="HTML",
                                 reply_markup=keyboard)
 
 
